@@ -24,7 +24,7 @@ RUN addgroup -g 1001 -S nodejs \
 USER nodejs
 
 # Puerto configurable (por defecto 3000)
-ARG PORT=3000
+ARG PORT=4000
 ENV PORT=${PORT}
 EXPOSE ${PORT}
 
