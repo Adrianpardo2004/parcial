@@ -1,33 +1,36 @@
+# Imagen base ligera de Node.js
 FROM node:18-alpine
 
+# Establecer directorio de trabajo
 WORKDIR /app
 
-# Copy package files
+# Copiar archivos de dependencias
 COPY package*.json ./
 
-# Copy environment file (if needed)
+# Copiar archivo de entorno (opcional)
 COPY .env ./
 
-# Install dependencies
+# Instalar solo dependencias de producción
 RUN npm install --omit=dev
 
-# Copy source code
-COPY src ./src
+# Copiar el resto del código
+COPY . .
 
-# Create non-root user
-RUN addgroup -g 1001 -S nodejs
-RUN adduser -S nodejs -u 1001
+# Crear usuario no root por seguridad
+RUN addgroup -g 1001 -S nodejs \
+  && adduser -S nodejs -u 1001 \
+  && chown -R nodejs:nodejs /app
 
-# Change ownership
-RUN chown -R nodejs:nodejs /app
 USER nodejs
 
-# Expose port
-EXPOSE 4000
+# Puerto configurable (por defecto 3000)
+ARG PORT=3000
+ENV PORT=${PORT}
+EXPOSE ${PORT}
 
-# Health check
+# Health check cada 30s
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-  CMD node -e "require('http').get('http://localhost:4000', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) })"
+  CMD node -e "require('http').get('http://localhost:${PORT}', res => process.exit(res.statusCode === 200 ? 0 : 1))"
 
-# Start the application
+# Comando por defecto
 CMD ["npm", "start"]
