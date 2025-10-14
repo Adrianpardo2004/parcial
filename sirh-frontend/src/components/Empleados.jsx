@@ -13,14 +13,16 @@ function Empleados() {
     apellido: "", 
     cargo: "", 
     estado: "activo",
-    correo: "",        // agregado
-    password: ""       // agregado
+    correo: "",
+    password: ""
   });
   const [editingId, setEditingId] = useState(null);
 
+  const API_BASE = import.meta.env.VITE_API_URL;
+
   const fetchEmpleados = async () => {
     try {
-      const res = await axios.get("http://localhost:4000/api/empleados");
+      const res = await axios.get(`${API_BASE}/api/empleados`);
       setEmpleados(res.data);
     } catch (err) {
       console.log(err);
@@ -29,14 +31,13 @@ function Empleados() {
 
   useEffect(() => { fetchEmpleados(); }, []);
 
-  // Crear o actualizar
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
       if(editingId){
-        await axios.put(`http://localhost:4000/api/empleados/${editingId}`, form);
+        await axios.put(`${API_BASE}/api/empleados/${editingId}`, form);
       } else {
-        await axios.post("http://localhost:4000/api/empleados", form);
+        await axios.post(`${API_BASE}/api/empleados`, form);
       }
       setForm({ nro_documento: "", nombre: "", apellido: "", cargo: "", estado: "activo", correo:"", password:"" });
       setEditingId(null);
@@ -46,7 +47,6 @@ function Empleados() {
     }
   }
 
-  // Exportar PDF
   const exportPDF = () => {
     const doc = new jsPDF();
     doc.text("Empleados SIRH Molino", 10, 10);
@@ -58,7 +58,6 @@ function Empleados() {
     doc.save("empleados.pdf");
   };
 
-  // Exportar XLSX
   const exportExcel = () => {
     const ws = XLSX.utils.json_to_sheet(empleados);
     const wb = XLSX.utils.book_new();
@@ -68,7 +67,6 @@ function Empleados() {
     saveAs(data, "empleados.xlsx");
   };
 
-  // Editar
   const handleEdit = (empleado) => {
     setForm({
       nro_documento: empleado.nro_documento,
@@ -82,18 +80,16 @@ function Empleados() {
     setEditingId(empleado._id);
   }
 
-  // Eliminar
   const handleDelete = async (id) => {
     if(window.confirm("¿Eliminar empleado y sus contratos?")){
-      await axios.delete(`http://localhost:4000/api/empleados/${id}`);
+      await axios.delete(`${API_BASE}/api/empleados/${id}`);
       fetchEmpleados();
     }
   }
 
-  // Buscar
   const handleBuscar = async () => {
     try {
-      const res = await axios.get(`http://localhost:4000/api/empleados/buscar?q=${q}`);
+      const res = await axios.get(`${API_BASE}/api/empleados/buscar?q=${q}`);
       alert(`Empleado: ${res.data.empleado.nombre}, Contratos: ${res.data.cantidad_contratos}`);
     } catch (err) {
       alert("Empleado no encontrado");

@@ -4,23 +4,23 @@ import { jsPDF } from "jspdf";
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
 
-
-
 function Contratos() {
   const [contratos, setContratos] = useState([]);
   const [empleados, setEmpleados] = useState([]);
   const [form, setForm] = useState({ empleado_id: "", fecha_inicio: "", fecha_fin: "", valor: "" });
   const [editingId, setEditingId] = useState(null);
 
+  const API_BASE = import.meta.env.VITE_API_URL;
+
   const fetchContratos = async () => {
-    const res = await axios.get("http://localhost:4000/api/contratos");
+    const res = await axios.get(`${API_BASE}/api/contratos`);
     setContratos(res.data);
   };
 
   const fetchEmpleados = async () => {
-    const res = await axios.get("http://localhost:4000/api/empleados");
+    const res = await axios.get(`${API_BASE}/api/empleados`);
     setEmpleados(res.data);
-  }
+  };
 
   useEffect(() => {
     fetchContratos();
@@ -31,40 +31,41 @@ function Contratos() {
     e.preventDefault();
     try {
       if(editingId){
-        await axios.put(`http://localhost:4000/api/contratos/${editingId}`, form);
+        await axios.put(`${API_BASE}/api/contratos/${editingId}`, form);
       } else {
-        await axios.post("http://localhost:4000/api/contratos", form);
+        await axios.post(`${API_BASE}/api/contratos`, form);
       }
       setForm({ empleado_id: "", fecha_inicio: "", fecha_fin: "", valor: "" });
       setEditingId(null);
       fetchContratos();
     } catch(err){ console.log(err) }
   }
-  const exportPDF = () => {
-  const doc = new jsPDF();
-  doc.text("Contratos SIRH Molino", 10, 10);
-  let row = 20;
-  contratos.forEach(c => {
-    doc.text(`${c.empleado_id?.nombre || "N/A"} - ${new Date(c.fecha_inicio).toLocaleDateString()} / ${new Date(c.fecha_fin).toLocaleDateString()} - $${c.valor}`, 10, row);
-    row += 10;
-  });
-  doc.save("contratos.pdf");
-};
 
-const exportExcel = () => {
-  const dataExcel = contratos.map(c => ({
-    Empleado: c.empleado_id?.nombre || "N/A",
-    Fecha_Inicio: new Date(c.fecha_inicio).toLocaleDateString(),
-    Fecha_Fin: new Date(c.fecha_fin).toLocaleDateString(),
-    Valor: c.valor
-  }));
-  const ws = XLSX.utils.json_to_sheet(dataExcel);
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, "Contratos");
-  const excelBuffer = XLSX.write(wb, { bookType: "xlsx", type: "array" });
-  const data = new Blob([excelBuffer], {type: "application/octet-stream"});
-  saveAs(data, "contratos.xlsx");
-};
+  const exportPDF = () => {
+    const doc = new jsPDF();
+    doc.text("Contratos SIRH Molino", 10, 10);
+    let row = 20;
+    contratos.forEach(c => {
+      doc.text(`${c.empleado_id?.nombre || "N/A"} - ${new Date(c.fecha_inicio).toLocaleDateString()} / ${new Date(c.fecha_fin).toLocaleDateString()} - $${c.valor}`, 10, row);
+      row += 10;
+    });
+    doc.save("contratos.pdf");
+  };
+
+  const exportExcel = () => {
+    const dataExcel = contratos.map(c => ({
+      Empleado: c.empleado_id?.nombre || "N/A",
+      Fecha_Inicio: new Date(c.fecha_inicio).toLocaleDateString(),
+      Fecha_Fin: new Date(c.fecha_fin).toLocaleDateString(),
+      Valor: c.valor
+    }));
+    const ws = XLSX.utils.json_to_sheet(dataExcel);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Contratos");
+    const excelBuffer = XLSX.write(wb, { bookType: "xlsx", type: "array" });
+    const data = new Blob([excelBuffer], {type: "application/octet-stream"});
+    saveAs(data, "contratos.xlsx");
+  };
 
   const handleEdit = (c) => {
     setForm({ empleado_id:c.empleado_id._id, fecha_inicio:c.fecha_inicio.slice(0,10), fecha_fin:c.fecha_fin.slice(0,10), valor:c.valor });
@@ -73,7 +74,7 @@ const exportExcel = () => {
 
   const handleDelete = async (id) => {
     if(window.confirm("¿Eliminar contrato?")){
-      await axios.delete(`http://localhost:4000/api/contratos/${id}`);
+      await axios.delete(`${API_BASE}/api/contratos/${id}`);
       fetchContratos();
     }
   }
