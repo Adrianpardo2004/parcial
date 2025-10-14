@@ -7,9 +7,6 @@ WORKDIR /app
 # Copiar archivos de dependencias
 COPY package*.json ./
 
-# Copiar archivo de entorno (opcional)
-COPY .env ./
-
 # Instalar solo dependencias de producción
 RUN npm install --omit=dev
 
